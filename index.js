@@ -9,7 +9,7 @@ const drive = deta.Drive("photos");
 
 app.all('/', (req, res) => {
     console.log("Just got a request!")
-    res.send('Yo!')
+    res.send('Welcome!')
 })
 
 app.get('/image/:name', async(req, res) => {
