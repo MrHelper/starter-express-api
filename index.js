@@ -11,8 +11,11 @@ const drive = deta.Drive("photos");
 const cors = require('cors');
 
 app.use(cors());
-
 app.use(fileUpload());
+
+app.get('/', async(req, res) => {
+    res.send("Welcome")
+});
 
 app.get('/image/:name', async(req, res) => {
     try {
@@ -62,35 +65,6 @@ app.post('/upload', async(req, res) => {
         });
 
 });
-
-
-
-app.post('*', async(req, res) => {
-    let fileName = req.path.slice(1)
-    console.log(typeof req.body)
-
-    let ress = await s3.putObject({
-        Body: JSON.stringify(req.body),
-        Bucket: process.env.BUCKET,
-        Key: fileName,
-    }).promise()
-
-    res.set('Content-type', 'text/plain')
-    res.send(ress).end()
-})
-
-app.delete('*', async(req, res) => {
-    let filename = req.path.slice(1)
-
-    await s3.deleteObject({
-        Bucket: process.env.BUCKET,
-        Key: filename,
-    }).promise()
-
-    res.set('Content-type', 'text/plain')
-    res.send('ok').end()
-})
-
 
 const port = process.env.PORT || 3000
 app.listen(port, () => {
