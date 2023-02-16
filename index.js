@@ -52,18 +52,17 @@ app.get('*', async(req, res) => {
 })
 
 app.post('*', async(req, res) => {
-    let filename = req.path.slice(1)
-
+    let fileName = req.path.slice(1)
     console.log(typeof req.body)
 
     await s3.putObject({
         Body: JSON.stringify(req.body),
         Bucket: process.env.BUCKET,
-        Key: filename,
+        Key: fileName,
     }).promise()
 
     res.set('Content-type', 'text/plain')
-    res.send('ok').end()
+    res.send(fileName).end()
 })
 
 app.delete('*', async(req, res) => {
