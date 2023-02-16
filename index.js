@@ -3,13 +3,16 @@ const express = require('express')
 const app = express()
 const AWS = require("aws-sdk");
 const s3 = new AWS.S3()
-const bodyParser = require('body-parser');
+const fileUpload = require('express-fileupload');
 const { Deta } = require("deta");
 const detaKey = process.env.DETA_KEY
 const deta = Deta(detaKey);
 const drive = deta.Drive("photos");
+const cors = require('cors');
 
-app.use(bodyParser.json())
+app.use(cors());
+
+app.use(fileUpload());
 
 app.get('/image/:name', async(req, res) => {
     try {
@@ -29,40 +32,51 @@ app.get('/image/:name', async(req, res) => {
     }
 });
 
-app.get('*', async(req, res) => {
-    let filename = req.path.slice(1)
-
-    try {
-        let s3File = await s3.getObject({
-            Bucket: process.env.BUCKET,
-            Key: filename,
-        }).promise()
-
-        res.set('Content-type', s3File.ContentType)
-        res.send(s3File.Body.toString()).end()
-    } catch (error) {
-        if (error.code === 'NoSuchKey') {
-            console.log(`No such key ${filename}`)
-            res.sendStatus(404).end()
-        } else {
-            console.log(error)
-            res.sendStatus(500).end()
-        }
+app.post('/upload', async(req, res) => {
+    if (!req.files) {
+        return res.status(400).send('No file uploaded.');
     }
-})
+
+    const file = req.files.file;
+    const fileName = `${Date.now()}.${file.name.slice(((file.name.lastIndexOf(".") - 1) >>> 0) + 2)}`;
+    const fileType = file.mimetype;
+    const fileContent = file.data;
+
+    const s3Params = {
+        Bucket: process.env.BUCKET,
+        Key: fileName,
+        Body: fileContent,
+        ContentType: fileType,
+    };
+    s3.upload(s3Params).promise().then(data => {
+            const publicUrl = s3.getSignedUrl('getObject', {
+                Bucket: process.env.BUCKET,
+                Key: fileName,
+                Expires: null // URL expiration time in seconds
+            });
+            res.json({ "File": fileName, "FileURL": publicUrl })
+        })
+        .catch(err => {
+            console.error(err);
+            res.status(500).send('Error getting object from S3');
+        });
+
+});
+
+
 
 app.post('*', async(req, res) => {
     let fileName = req.path.slice(1)
     console.log(typeof req.body)
 
-    await s3.putObject({
+    let ress = await s3.putObject({
         Body: JSON.stringify(req.body),
         Bucket: process.env.BUCKET,
         Key: fileName,
     }).promise()
 
     res.set('Content-type', 'text/plain')
-    res.send(fileName).end()
+    res.send(ress).end()
 })
 
 app.delete('*', async(req, res) => {
