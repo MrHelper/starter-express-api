@@ -1,72 +1,182 @@
-require('dotenv').config();
-const express = require('express')
-const app = express()
+require("dotenv").config();
+const express = require("express");
+const app = express();
 const AWS = require("aws-sdk");
-const s3 = new AWS.S3()
-const fileUpload = require('express-fileupload');
+const s3 = new AWS.S3();
+const fileUpload = require("express-fileupload");
 const { Deta } = require("deta");
-const detaKey = process.env.DETA_KEY
+const detaKey = process.env.DETA_KEY;
 const deta = Deta(detaKey);
 const drive = deta.Drive("photos");
-const cors = require('cors');
+const db = deta.Base("ukfDB");
+const dbAuth = deta.Base("ukfDBUser");
+const cors = require("cors");
 
 app.use(cors());
 app.use(fileUpload());
 
-app.get('/', async(req, res) => {
-    res.send("Welcome")
+async function getSignedUrl(key) {
+  return new Promise((resolve, reject) => {
+    let params = {
+      Bucket: process.env.BUCKET,
+      Key: key,
+      Expires: 60 * 60 * 24 * 3,
+    };
+    s3.getSignedUrl("getObject", params, (err, url) => {
+      if (err) reject(err);
+      resolve(url);
+    });
+  });
+}
+
+app.get("/", async (req, res) => {
+  res.send("Welcome");
 });
 
-app.get('/image/:name', async(req, res) => {
+app.get("/project", async (req, res) => {
+  let dataPJ = await db.fetch({
+    Type: "pj",
+  });
+  let allItems = dataPJ.items;
+  while (dataPJ.last) {
+    dataPJ = await db.fetch({}, { last: dataPJ.last });
+    allItems = allItems.concat(dataPJ.items);
+  }
+
+  let project = allItems.sort((a, b) => b.No - a.No);
+  for (let i = 0; i < project.length; i++) {
+    let element = project[i];
+    let imgs = element.Images.split(",");
+    let imgurl = [];
+
+    let imgUrlsPromises = imgs.map((imgname) => {
+      let params = {
+        Bucket: process.env.BUCKET,
+        Key: imgname,
+        Expires: 60 * 60 * 24 * 3, // URL expiration time in seconds
+      };
+      return new Promise((resolve, reject) => {
+        s3.getSignedUrl("getObject", params, (err, url) => {
+          if (err) reject(err);
+          resolve(url);
+        });
+      });
+    });
+
     try {
-        const name = req.params.name;
-        const fileData = await drive.get(name);
-        if (fileData) {
-            const arrayBuffer = await fileData.arrayBuffer();
-            const buffer = Buffer.from(arrayBuffer);
-            res.set("Content-Type", "image/jpeg");
-            res.status(200).end(buffer, 'binary');
-        } else {
-            res.status(500).send('Internal server error');
-        }
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Internal server error');
+      let imgUrls = await Promise.all(imgUrlsPromises);
+      imgurl = imgUrls.filter((url) => url !== null);
+    } catch (err) {
+      console.error("Error getting signed URLs for images:", err);
     }
+
+    project[i].ImagesURL = imgurl.join(",");
+  }
+
+  res.send(project);
 });
 
-app.post('/upload', async(req, res) => {
-    if (!req.files) {
-        return res.status(400).send('No file uploaded.');
+
+// app.get("/project", async (req, res) => {
+//   let dataPJ = await db.fetch({
+//     Type: "pj",
+//   });
+//   let allItems = dataPJ.items;
+//   while (dataPJ.last) {
+//     dataPJ = await db.fetch({}, { last: dataPJ.last });
+//     allItems = allItems.concat(dataPJ.items);
+//   }
+
+//   let project = allItems.sort((a, b) => b.No - a.No);
+//   for (let i = 0; i < project.length; i++) {
+//     let element = project[i];
+//     let imgs = element.Images.split(",");
+//     let imgurl = [];
+//     for (let j = 0; j < imgs.length; j++) {
+//       let imgname = imgs[j];
+//       // let publicUrl = s3.getSignedUrl("getObject", {
+//       //   Bucket: process.env.BUCKET,
+//       //   Key: imgname,
+//       //   Expires: 60 * 60 * 24 * 3, // URL expiration time in seconds
+//       // });
+//       // imgurl.push(publicUrl);
+//       let params = {
+//         Bucket: process.env.BUCKET,
+//         Key: imgname,
+//         Expires: 60 * 60 * 24 * 3, // URL expiration time in seconds
+//       };
+
+//       try {
+//         let publicUrl = await new Promise((resolve, reject) => {
+//           s3.getSignedUrl("getObject", params, (err, url) => {
+//             if (err) reject(err);
+//             resolve(url);
+//           });
+//         });
+//         imgurl.push(publicUrl);
+//       } catch (err) {
+//         console.error(`Error getting signed URL for image ${imgname}:`, err);
+//       }
+//     }
+//     project[i].ImagesURL = imgurl.join(",");
+//   }
+
+//   res.send(project);
+// });
+
+app.get("/image/:name", async (req, res) => {
+  try {
+    const name = req.params.name;
+    const fileData = await drive.get(name);
+    if (fileData) {
+      const arrayBuffer = await fileData.arrayBuffer();
+      const buffer = Buffer.from(arrayBuffer);
+      res.set("Content-Type", "image/jpeg");
+      res.status(200).end(buffer, "binary");
+    } else {
+      res.status(500).send("Internal server error");
     }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send("Internal server error");
+  }
+});
 
-    const file = req.files.file;
-    const fileName = `${Date.now()}.${file.name.slice(((file.name.lastIndexOf(".") - 1) >>> 0) + 2)}`;
-    const fileType = file.mimetype;
-    const fileContent = file.data;
+app.post("/upload", async (req, res) => {
+  if (!req.files) {
+    return res.status(400).send("No file uploaded.");
+  }
 
-    const s3Params = {
+  const file = req.files.file;
+  const fileName = `${Date.now()}.${file.name.slice(
+    ((file.name.lastIndexOf(".") - 1) >>> 0) + 2
+  )}`;
+  const fileType = file.mimetype;
+  const fileContent = file.data;
+
+  const s3Params = {
+    Bucket: process.env.BUCKET,
+    Key: fileName,
+    Body: fileContent,
+    ContentType: fileType,
+  };
+  s3.upload(s3Params)
+    .promise()
+    .then((data) => {
+      const publicUrl = s3.getSignedUrl("getObject", {
         Bucket: process.env.BUCKET,
         Key: fileName,
-        Body: fileContent,
-        ContentType: fileType,
-    };
-    s3.upload(s3Params).promise().then(data => {
-            const publicUrl = s3.getSignedUrl('getObject', {
-                Bucket: process.env.BUCKET,
-                Key: fileName,
-                Expires: null // URL expiration time in seconds
-            });
-            res.json({ "File": fileName, "FileURL": publicUrl })
-        })
-        .catch(err => {
-            console.error(err);
-            res.status(500).send('Error getting object from S3'); 
-        });
-
+        Expires: null, // URL expiration time in seconds
+      });
+      res.json({ File: fileName, FileURL: publicUrl });
+    })
+    .catch((err) => {
+      console.error(err);
+      res.status(500).send("Error getting object from S3");
+    });
 });
 
-const port = process.env.PORT || 3000
+const port = process.env.PORT || 3000;
 app.listen(port, () => {
-    console.log(`index.js listening at http://localhost:${port}`)
-})
+  console.log(`index.js listening at http://localhost:${port}`);
+});
