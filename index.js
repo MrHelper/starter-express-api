@@ -61,7 +61,7 @@ app.post('/upload', async(req, res) => {
         })
         .catch(err => {
             console.error(err);
-            res.status(500).send('Error getting object from S3');
+            res.status(500).send('Error getting object from S3'); 
         });
 
 });
