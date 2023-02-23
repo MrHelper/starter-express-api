@@ -12,7 +12,7 @@ const db = deta.Base("ukfDB");
 const dbAuth = deta.Base("ukfDBUser");
 
 const CyclicDb = require("@cyclic.sh/dynamodb");
-const ukfdb = CyclicDb("ukf-db");
+const ukfdb = CyclicDb("real-puce-cape-buffalo-cuffCyclicDB");
 
 const dbpj = ukfdb.collection("project");
 const dbuser = ukfdb.collection("user");
