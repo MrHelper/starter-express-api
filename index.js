@@ -46,7 +46,7 @@ app.get("/user/create", async (req, res) => {
     pass: "123",
   });
 
-  let item = await animals.get("admin")
+  let item = await dbuser.get("admin")
   console.log(item)
   res.send(item);
 });
