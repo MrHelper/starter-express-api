@@ -41,12 +41,12 @@ app.get("/", async (req, res) => {
 });
 
 app.get("/user/create", async (req, res) => {
-  let leo = await dbuser.set("admin", {
+  let admin = await dbuser.set("admin", {
     email: "123",
     pass: "123",
   });
 
-  let item = await animals.get("leo")
+  let item = await animals.get("admin")
   console.log(item)
   res.send(item);
 });
