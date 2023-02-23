@@ -10,6 +10,13 @@ const deta = Deta(detaKey);
 const drive = deta.Drive("photos");
 const db = deta.Base("ukfDB");
 const dbAuth = deta.Base("ukfDBUser");
+
+const CyclicDb = require("@cyclic.sh/dynamodb");
+const ukfdb = CyclicDb("ukf-db");
+
+const dbpj = ukfdb.collection("project");
+const dbuser = ukfdb.collection("user");
+
 const cors = require("cors");
 
 app.use(cors());
@@ -31,6 +38,17 @@ async function getSignedUrl(key) {
 
 app.get("/", async (req, res) => {
   res.send("Welcome");
+});
+
+app.get("/user/create", async (req, res) => {
+  let leo = await dbuser.set("admin", {
+    email: "123",
+    pass: "123",
+  });
+
+  let item = await animals.get("leo")
+  console.log(item)
+  res.send(item);
 });
 
 app.get("/project", async (req, res) => {
@@ -75,7 +93,6 @@ app.get("/project", async (req, res) => {
 
   res.send(project);
 });
-
 
 // app.get("/project", async (req, res) => {
 //   let dataPJ = await db.fetch({
