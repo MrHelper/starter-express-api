@@ -44,13 +44,12 @@ app.get("/", async (req, res) => {
 });
 
 app.post("/login", jsonParser, async (req, res) => {
-  let email = req.body.email
-  let pass = req.body.pass
+  let email = req.body.email;
+  let pass = req.body.pass;
   let item = await dbuser.get("admin");
+  if (item.props.pass == pass && item.props.email == email) res.send(true);
+  else res.send(false);
   // check is email and pass include on any item of collection
-
-
-  res.send(item)
 });
 
 app.get("/user/create", async (req, res) => {
