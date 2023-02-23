@@ -17,6 +17,9 @@ const ukfdb = CyclicDb("real-puce-cape-buffalo-cuffCyclicDB");
 const dbpj = ukfdb.collection("project");
 const dbuser = ukfdb.collection("user");
 
+const bodyParser = require("body-parser");
+var jsonParser = bodyParser.json();
+
 const cors = require("cors");
 
 app.use(cors());
@@ -40,14 +43,28 @@ app.get("/", async (req, res) => {
   res.send("Welcome");
 });
 
+app.post("/login", jsonParser, async (req, res) => {
+  let email = req.body.email;
+  let pass = req.body.pass;
+  let item = await dbuser.query({
+    email: email,
+    password: pass,
+  });
+  if (result.Items.length > 0) {
+    res.json({ result: true });
+  } else {
+    res.json({ result: false });
+  }
+});
+
 app.get("/user/create", async (req, res) => {
   let admin = await dbuser.set("admin", {
     email: "123",
     pass: "123",
   });
 
-  let item = await dbuser.get("admin")
-  console.log(item)
+  let item = await dbuser.get("admin");
+  console.log(item);
   res.send(item);
 });
 
