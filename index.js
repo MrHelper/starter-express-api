@@ -43,6 +43,12 @@ app.get("/", async (req, res) => {
   res.send("Welcome");
 });
 
+app.get("/login", jsonParser, async (req, res) => {
+  let item = await dbuser.get();
+  res.send('asdasd');
+  // check is email and pass include on any item of collection
+});
+
 app.post("/login", jsonParser, async (req, res) => {
   let email = req.body.email;
   let pass = req.body.pass;
@@ -52,13 +58,27 @@ app.post("/login", jsonParser, async (req, res) => {
   // check is email and pass include on any item of collection
 });
 
+app.post("/project", jsonParser, async (req, res) => {
+  let email = req.body.email;
+  let pass = req.body.pass;
+  let item = await dbuser.get("admin");
+  if (item.props.pass == pass && item.props.email == email) res.send(true);
+  else res.send(false);
+  // check is email and pass include on any item of collection
+});
+
 app.get("/user/create", async (req, res) => {
-  let admin = await dbuser.set("admin", {
+  await dbuser.set("admin", {
     email: "123",
     pass: "123",
   });
 
-  let item = await dbuser.get("admin");
+  await dbuser.set("admin2", {
+    email: "123",
+    pass: "123",
+  });
+
+  let item = await dbuser.list()
   console.log(item);
   res.send(item);
 });
