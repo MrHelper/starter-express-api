@@ -92,17 +92,9 @@ app.delete("/project/:key", async (req, res) => {
 
 app.get("/user/create", async (req, res) => {
   await dbuser.set("admin", {
-    email: "123",
-    pass: "123",
+    email: "hung.np2188@icloud.com",
+    pass: "vungoimora",
   });
-
-  await dbuser.set("admin2", {
-    email: "123",
-    pass: "123",
-  });
-
-  let item = await dbuser.filter({ email: "123", pass: "123" });
-  console.log(item);
   res.send(item);
 });
 
