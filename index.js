@@ -78,7 +78,7 @@ app.get("/user/create", async (req, res) => {
     pass: "123",
   });
 
-  let item = await dbuser.list()
+  let item = await dbuser.filter()
   console.log(item);
   res.send(item);
 });
