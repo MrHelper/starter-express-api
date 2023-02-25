@@ -45,7 +45,7 @@ app.get("/", async (req, res) => {
 
 app.get("/login", jsonParser, async (req, res) => {
   let item = await dbuser.get();
-  res.send('asdasd');
+  res.send("asdasd");
   // check is email and pass include on any item of collection
 });
 
@@ -78,7 +78,7 @@ app.get("/user/create", async (req, res) => {
     pass: "123",
   });
 
-  let item = await dbuser.filter()
+  let item = await dbuser.filter({ email: "123", pass: "123" });
   console.log(item);
   res.send(item);
 });
