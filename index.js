@@ -59,12 +59,35 @@ app.post("/login", jsonParser, async (req, res) => {
 });
 
 app.post("/project", jsonParser, async (req, res) => {
-  let email = req.body.email;
-  let pass = req.body.pass;
-  let item = await dbuser.get("admin");
-  if (item.props.pass == pass && item.props.email == email) res.send(true);
-  else res.send(false);
-  // check is email and pass include on any item of collection
+  let no = req.body.no;
+  let name = req.body.name.replace(/\s+/g, "_");
+  let location = req.body.location;
+  let tags = req.body.tags;
+  let info = req.body.info;
+  let images = req.body.images;
+
+  let key = req.body.key ? req.body.key : name + "_" + Date.now();
+
+  dbpj.set(key, {
+    no: no,
+    name: name,
+    location: location,
+    tags: tags,
+    info: info,
+    images: images,
+  });
+});
+
+app.get("/project", async (req, res) => {
+  let item = await dbpj.filter();
+  console.log(item);
+  res.send(item);
+});
+
+app.delete("/project/:key", async (req, res) => {
+  const key = req.params.key;
+  const item = await dbpj.delete(key);
+  res.send(item);
 });
 
 app.get("/user/create", async (req, res) => {
