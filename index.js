@@ -59,26 +59,18 @@ app.post("/login", jsonParser, async (req, res) => {
 });
 
 app.post("/project", jsonParser, async (req, res) => {
-  let no = req.body.no;
-  let name = req.body.name.replace(/\s+/g, "_");
-  let location = req.body.location;
-  let tags = req.body.tags;
-  let info = req.body.info;
-  let images = req.body.images;
-
+  // let no = req.body.no;
+  // let name = req.body.name;
+  // let location = req.body.location;
+  // let tags = req.body.tags;
+  // let info = req.body.info;
+  // let images = req.body.images;
   let key = req.body.key ? req.body.key : name + "_" + Date.now();
-
-  dbpj.set(key, {
-    no: no,
-    name: name,
-    location: location,
-    tags: tags,
-    info: info,
-    images: images,
-  });
+  dbpj.set(key, req.body);
+  res.send(true);
 });
 
-app.get("/project", async (req, res) => {
+app.get("/projects", async (req, res) => {
   let item = await dbpj.filter();
   console.log(item);
   res.send(item);
