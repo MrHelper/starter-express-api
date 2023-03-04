@@ -43,12 +43,6 @@ app.get("/", async (req, res) => {
   res.send("Welcome");
 });
 
-app.get("/login", jsonParser, async (req, res) => {
-  let item = await dbuser.get();
-  res.send("asdasd");
-  // check is email and pass include on any item of collection
-});
-
 app.post("/login", jsonParser, async (req, res) => {
   let email = req.body.email;
   let pass = req.body.pass;
@@ -59,12 +53,6 @@ app.post("/login", jsonParser, async (req, res) => {
 });
 
 app.post("/project", jsonParser, async (req, res) => {
-  // let no = req.body.no;
-  // let name = req.body.name;
-  // let location = req.body.location;
-  // let tags = req.body.tags;
-  // let info = req.body.info;
-  // let images = req.body.images;
   let key = req.body.key ? req.body.key : name + "_" + Date.now();
   dbpj.set(key, req.body);
   res.send(true);
