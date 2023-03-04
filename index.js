@@ -53,9 +53,14 @@ app.post("/login", jsonParser, async (req, res) => {
 });
 
 app.post("/project", jsonParser, async (req, res) => {
-  let key = req.body.key ? req.body.key : req.body.Name.toLowerCase()
-  .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
-  .replace(/\s+/g, '-') + "_" + Date.now();
+  let key = req.body.key
+    ? req.body.key
+    : req.body.Name.toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, "-") +
+      "_" +
+      Date.now();
   dbpj.set(key, req.body);
   res.send(true);
 });
@@ -63,12 +68,13 @@ app.post("/project", jsonParser, async (req, res) => {
 app.get("/projects", async (req, res) => {
   let item = await dbpj.filter();
   console.log(item);
-  
-  let result = []
-  item.results.forEach(element => {
-    element.props.key = element.key
-    result.push(element.props)
+
+  let result = [];
+  item.results.forEach((element) => {
+    element.props.key = element.key;
+    result.push(element.props);
   });
+  result = result.sort((a, b) => b.No - a.No);
   res.send(result);
 });
 
