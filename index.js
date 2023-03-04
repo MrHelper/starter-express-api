@@ -82,7 +82,7 @@ app.get("/projects", async (req, res) => {
     let imgurl = [];
 
     let imgUrlsPromises = imgs.map((imgname) => {
-      if (imgname) {
+      if (imgname != "") {
         let params = {
           Bucket: process.env.BUCKET,
           Key: imgname,
