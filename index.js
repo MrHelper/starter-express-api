@@ -53,7 +53,7 @@ app.post("/login", jsonParser, async (req, res) => {
 });
 
 app.post("/project", jsonParser, async (req, res) => {
-  let key = req.body.key ? req.body.key : name + "_" + Date.now();
+  let key = req.body.key ? req.body.key : req.body.name + "_" + Date.now();
   dbpj.set(key, req.body);
   res.send(true);
 });
