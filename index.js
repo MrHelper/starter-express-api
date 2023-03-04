@@ -63,7 +63,13 @@ app.post("/project", jsonParser, async (req, res) => {
 app.get("/projects", async (req, res) => {
   let item = await dbpj.filter();
   console.log(item);
-  res.send(item.results);
+  
+  let result = []
+  item.results.forEach(element => {
+    element.props.key = element.key
+    result.push(element.props)
+  });
+  res.send(result);
 });
 
 app.delete("/project/:key", async (req, res) => {
