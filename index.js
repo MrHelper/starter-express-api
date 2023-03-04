@@ -54,8 +54,7 @@ app.post("/login", jsonParser, async (req, res) => {
 
 app.post("/project", jsonParser, async (req, res) => {
   let key = req.body.key ? req.body.key : req.body.Name.toLowerCase()
-  .replace(/[^\w\s]/gi, '')
-  .replace(/\s+/g, '_') + "_" + Date.now();
+  .normalize("NFD").replace(/[\u0300-\u036f]/g, "") + "_" + Date.now();
   dbpj.set(key, req.body);
   res.send(true);
 });
