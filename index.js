@@ -74,8 +74,38 @@ app.get("/projects", async (req, res) => {
     element.props.key = element.key;
     result.push(element.props);
   });
-  result = result.sort((a, b) => b.No - a.No);
-  res.send(result);
+
+  let project = result.sort((a, b) => b.No - a.No);
+  for (let i = 0; i < project.length; i++) {
+    let element = project[i];
+    let imgs = element.Images.split(",");
+    let imgurl = [];
+
+    let imgUrlsPromises = imgs.map((imgname) => {
+      let params = {
+        Bucket: process.env.BUCKET,
+        Key: imgname,
+        Expires: 60 * 60 * 24 * 3, // URL expiration time in seconds
+      };
+      return new Promise((resolve, reject) => {
+        s3.getSignedUrl("getObject", params, (err, url) => {
+          if (err) reject(err);
+          resolve(url);
+        });
+      });
+    });
+
+    try {
+      let imgUrls = await Promise.all(imgUrlsPromises);
+      imgurl = imgUrls.filter((url) => url !== null);
+    } catch (err) {
+      console.error("Error getting signed URLs for images:", err);
+    }
+
+    project[i].ImagesURL = imgurl.join(",");
+  }
+
+  res.send(project);
 });
 
 app.delete("/project/:key", async (req, res) => {
