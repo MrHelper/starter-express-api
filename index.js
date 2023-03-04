@@ -80,8 +80,9 @@ app.get("/projects", async (req, res) => {
     let element = project[i];
     let imgs = element.Images.split(",");
     let imgurl = [];
-    if (imgs.length > 0) {
-      let imgUrlsPromises = imgs.map((imgname) => {
+
+    let imgUrlsPromises = imgs.map((imgname) => {
+      if (imgname) {
         let params = {
           Bucket: process.env.BUCKET,
           Key: imgname,
@@ -93,16 +94,16 @@ app.get("/projects", async (req, res) => {
             resolve(url);
           });
         });
-      });
-
-      try {
-        let imgUrls = await Promise.all(imgUrlsPromises);
-        imgurl = imgUrls.filter((url) => url !== null);
-      } catch (err) {
-        console.error("Error getting signed URLs for images:", err);
       }
-      project[i].ImagesURL = imgurl.join(",");
+    });
+
+    try {
+      let imgUrls = await Promise.all(imgUrlsPromises);
+      imgurl = imgUrls.filter((url) => url !== null);
+    } catch (err) {
+      console.error("Error getting signed URLs for images:", err);
     }
+    project[i].ImagesURL = imgurl.join(",");
   }
 
   res.send(project);
