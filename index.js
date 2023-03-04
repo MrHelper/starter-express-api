@@ -54,7 +54,7 @@ app.post("/login", jsonParser, async (req, res) => {
 
 app.post("/project", jsonParser, async (req, res) => {
   let key =
-    (req.body.key == null || req.body.key == 'undefined') ? req.body.name + "_" + Date.now() : req.body.key;
+    (req.body.key == null || req.body.key == 'undefined') ? req.body.Name + "_" + Date.now() : req.body.key;
   dbpj.set(key, req.body);
   res.send(true);
 });
