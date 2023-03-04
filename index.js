@@ -67,8 +67,6 @@ app.post("/project", jsonParser, async (req, res) => {
 
 app.get("/projects", async (req, res) => {
   let item = await dbpj.filter();
-  console.log(item);
-
   let result = [];
   item.results.forEach((element) => {
     element.props.key = element.key;
@@ -78,7 +76,8 @@ app.get("/projects", async (req, res) => {
   let project = result.sort((a, b) => b.No - a.No);
   for (let i = 0; i < project.length; i++) {
     let element = project[i];
-    let imgs = element.Images.split(",");
+    console.log(element)
+    let imgs = element.Images ? element.Images.split(",") : [];
     let imgurl = [];
 
     let imgUrlsPromises = imgs.map((imgname) => {
