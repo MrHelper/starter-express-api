@@ -62,7 +62,7 @@ app.post("/project", jsonParser, async (req, res) => {
 app.get("/projects", async (req, res) => {
   let item = await dbpj.filter();
   console.log(item);
-  res.send(item);
+  res.send(item.results);
 });
 
 app.delete("/project/:key", async (req, res) => {
